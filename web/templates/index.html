@@ -6,53 +6,100 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Crypto Price Converter</h1>
+<div class="container">
+    <h1>Crypto Price Converter</h1>
 
-        <form id="convertForm">
-            <input list="tokens" id="from" placeholder="From (e.g., BTC)" value="BTC" required>
-            <input list="tokens" id="to" placeholder="To (e.g., USD)" value="USD" required>
+    <form id="convertForm">
+        <div class="input-swap-group">
+            <!-- From Input -->
+            <div class="dropdown">
+                <label class="input-label" for="from">From</label>
+                <input type="text" id="from" placeholder="(e.g., BTC)" value="BTC" required autocomplete="off">
+                <ul class="dropdown-list" id="fromList"></ul>
+            </div>
 
-            <datalist id="tokens">
-                <option value="BTC">
-                <option value="ETH">
-                <option value="LTC">
-                <option value="DOGE">
-                <option value="BNB">
-                <option value="ADA">
-                <option value="USD">
-                <option value="EUR">
-                <option value="GBP">
-            </datalist>
+            <!-- Swap Button -->
+            <button type="button" id="swapBtn" class="swap-btn" title="Swap currencies">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M8 3L4 7l4 4M16 21l4-4-4-4"/>
+                </svg>
+            </button>
 
-            <button type="submit">Convert</button>
-        </form>
+            <!-- To Input -->
+            <div class="dropdown">
+                <label class="input-label" for="to">To</label>
+                <input type="text" id="to" placeholder="(e.g., USD)" value="USD" required autocomplete="off">
+                <ul class="dropdown-list" id="toList"></ul>
+            </div>
+        </div>
 
-        <div id="result"></div>
-        <small>Powered by Coinbase API</small>
-    </div>
+        <button type="submit">Convert</button>
+    </form>
 
-    <script>
-        const form = document.getElementById('convertForm');
-        const resultDiv = document.getElementById('result');
+    <div id="result"></div>
+    <small>Powered by Coinbase API</small>
+</div>
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const from = document.getElementById('from').value.toUpperCase();
-            const to = document.getElementById('to').value.toUpperCase();
+<script>
+const tokens = ["BTC","ETH","LTC","DOGE","BNB","ADA","USD","EUR","GBP"];
+const fromInput = document.getElementById('from');
+const toInput = document.getElementById('to');
+const fromList = document.getElementById('fromList');
+const toList = document.getElementById('toList');
+const swapBtn = document.getElementById('swapBtn');
+const form = document.getElementById('convertForm');
+const resultDiv = document.getElementById('result');
 
-            resultDiv.textContent = "Loading...";
-
-            try {
-                const res = await fetch(`/convert?from=${from}&to=${to}`);
-                if (!res.ok) throw new Error("Conversion failed");
-                const data = await res.json();
-                resultDiv.textContent = `1 ${data.from} = ${data.rate} ${data.to}`;
-            } catch (err) {
-                resultDiv.textContent = "Error fetching conversion rate.";
-                console.error(err);
-            }
+// Populate dropdown list dynamically
+function updateDropdown(input, list) {
+    list.innerHTML = '';
+    const filter = input.value.toUpperCase();
+    tokens.filter(t => t.includes(filter)).forEach(token => {
+        const item = document.createElement('li');
+        item.textContent = token;
+        item.classList.add('dropdown-item');
+        item.addEventListener('click', () => {
+            input.value = token;
+            list.style.display = 'none';
         });
-    </script>
+        list.appendChild(item);
+    });
+    list.style.display = list.children.length ? 'block' : 'none';
+}
+
+// Show dropdown on input
+[fromInput, toInput].forEach((input, idx) => {
+    const list = idx === 0 ? fromList : toList;
+    input.addEventListener('input', () => updateDropdown(input, list));
+    input.addEventListener('focus', () => updateDropdown(input, list));
+    input.addEventListener('blur', () => setTimeout(() => list.style.display='none', 100));
+});
+
+// Swap functionality
+swapBtn.addEventListener('click', () => {
+    const fromValue = fromInput.value;
+    const toValue = toInput.value;
+    fromInput.value = toValue;
+    toInput.value = fromValue;
+    resultDiv.textContent = '';
+});
+
+// Form submit
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const from = fromInput.value.toUpperCase();
+    const to = toInput.value.toUpperCase();
+    resultDiv.textContent = "Loading...";
+    try {
+        const res = await fetch(`/convert?from=${from}&to=${to}`);
+        if (!res.ok) throw new Error("Conversion failed");
+        const data = await res.json();
+        resultDiv.textContent = `1 ${data.from} = ${data.rate} ${data.to}`;
+    } catch (err) {
+        resultDiv.textContent = "Error fetching conversion rate.";
+        console.error(err);
+    }
+});
+</script>
 </body>
 </html>
