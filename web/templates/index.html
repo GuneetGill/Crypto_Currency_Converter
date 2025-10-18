@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crypto Price Converter</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Crypto Price Converter</h1>
+
+        <form id="convertForm">
+            <input list="tokens" id="from" placeholder="From (e.g., BTC)" value="BTC" required>
+            <input list="tokens" id="to" placeholder="To (e.g., USD)" value="USD" required>
+
+            <datalist id="tokens">
+                <option value="BTC">
+                <option value="ETH">
+                <option value="LTC">
+                <option value="DOGE">
+                <option value="BNB">
+                <option value="ADA">
+                <option value="USD">
+                <option value="EUR">
+                <option value="GBP">
+            </datalist>
+
+            <button type="submit">Convert</button>
+        </form>
+
+        <div id="result"></div>
+        <small>Powered by Coinbase API</small>
+    </div>
+
+    <script>
+        const form = document.getElementById('convertForm');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const from = document.getElementById('from').value.toUpperCase();
+            const to = document.getElementById('to').value.toUpperCase();
+
+            resultDiv.textContent = "Loading...";
+
+            try {
+                const res = await fetch(`/convert?from=${from}&to=${to}`);
+                if (!res.ok) throw new Error("Conversion failed");
+                const data = await res.json();
+                resultDiv.textContent = `1 ${data.from} = ${data.rate} ${data.to}`;
+            } catch (err) {
+                resultDiv.textContent = "Error fetching conversion rate.";
+                console.error(err);
+            }
+        });
+    </script>
+</body>
+</html>
