@@ -10,7 +10,7 @@ import (
 type RateLimiter struct {
     sync.Mutex
     Requests map[string][]time.Time // IP -> request timestamps
-    Limit    int                   // Max requests per window
+    MaxRequests int                // Max requests per window
     Window   time.Duration         // Time window duration
 }
 
@@ -18,7 +18,7 @@ type RateLimiter struct {
 func NewRateLimiter(limit int, window time.Duration) *RateLimiter {
     return &RateLimiter{
         Requests: make(map[string][]time.Time),
-        Limit:    limit,
+        MaxRequests: limit,
         Window:   window,
     }
 }
@@ -41,7 +41,7 @@ func (rl *RateLimiter) Limit(next http.Handler) http.Handler {
         rl.Requests[ip] = newTimes
         
         // Check rate limit
-        if len(newTimes) >= rl.Limit {
+        if len(newTimes) >= rl.MaxRequests {
             rl.Unlock()
             http.Error(w, "Too many requests", http.StatusTooManyRequests)
             return

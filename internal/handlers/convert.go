@@ -2,13 +2,12 @@
 package handlers
 
 import (
-	"crypto-project/internal/cache"
-    "crypto-project/internal/coinbase"
+    "github.com/GuneetGill/Crypto_Currency_Converter/internal/cache"
     "encoding/json"
     "log"
     "net/http"
-    "crypto-project/internal/services" // will hold Coinbase API logic
-    "crypto-project/internal/models"
+    "github.com/GuneetGill/Crypto_Currency_Converter/internal/services"
+    "github.com/GuneetGill/Crypto_Currency_Converter/internal/models"
 )
 
 var rateCache = cache.NewRateCache(30) // 30 second TTL
@@ -55,12 +54,7 @@ func ConvertHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(response)
-
-	
-	// Store in cache
+    // Store in cache and respond once
     rateCache.Set(key, rate)
-    json.NewEncoder(w).Encode(map[string]interface{}{
-        "from": from, "to": to, "rate": rate,
-    })
+    json.NewEncoder(w).Encode(response)
 }
