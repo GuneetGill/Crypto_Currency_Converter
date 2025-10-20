@@ -2,6 +2,8 @@
 package handlers
 
 import (
+	"crypto-project/internal/cache"
+    "crypto-project/internal/coinbase"
     "encoding/json"
     "log"
     "net/http"
@@ -9,11 +11,22 @@ import (
     "crypto-project/internal/models"
 )
 
+var rateCache = cache.NewRateCache(30) // 30 second TTL
+
 // ConvertHandler handles requests to /convert?from=BTC&to=USD
 func ConvertHandler(w http.ResponseWriter, r *http.Request) {
     // Read query params
     from := r.URL.Query().Get("from")
     to := r.URL.Query().Get("to")
+	key := from + "_" + to
+
+    // Check cache first
+    if rate, ok := rateCache.Get(key); ok {
+        json.NewEncoder(w).Encode(map[string]interface{}{
+            "from": from, "to": to, "rate": rate,
+        })
+        return
+    }
 
     if from == "" || to == "" {
         http.Error(w, "Missing 'from' or 'to' query parameter", http.StatusBadRequest)
@@ -43,4 +56,11 @@ func ConvertHandler(w http.ResponseWriter, r *http.Request) {
 
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(response)
+
+	
+	// Store in cache
+    rateCache.Set(key, rate)
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "from": from, "to": to, "rate": rate,
+    })
 }

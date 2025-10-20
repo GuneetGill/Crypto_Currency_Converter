@@ -1,3 +1,3 @@
-module crypto-project
+module github.com/GuneetGill/Crypto_Currency_Converter
 
-go 1.21
+go 1.23

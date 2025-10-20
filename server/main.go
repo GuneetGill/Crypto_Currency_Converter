@@ -7,6 +7,8 @@ import (
 )
 
 func main() {
+    limiter := middleware.NewRateLimiter(10, 1*60*1e9) // 10 requests per minute
+
     // Serve static files (CSS, JS if needed) at /static/
     http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./web/static"))))
 
